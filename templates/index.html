@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>元宝录音 Markdown 导出</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --font-literary: "Songti SC", "Noto Serif SC", "STSong", Georgia, serif;
+        --font-ui: "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+        --font-code: "SFMono-Regular", "Menlo", "Consolas", monospace;
+        --color-brand: #9a4021;
+        --color-brand-active: #b95837;
+        --color-brand-hover: #7e2c0e;
+        --color-brand-light: #ffdbd0;
+        --color-bg-base: #fff8f6;
+        --color-bg-card: #ffffff;
+        --color-bg-soft: #fff1ed;
+        --color-bg-user-msg: #f0e8e3;
+        --color-text-primary: #231916;
+        --color-text-secondary: #56423c;
+        --color-text-tertiary: #89726b;
+        --color-border-subtle: #f1dfd9;
+        --color-border-default: #dcc1b8;
+        --color-error: #ba1a1a;
+        --color-error-bg: #ffdad6;
+        --shadow-paper: 0 2px 12px rgba(35, 25, 22, 0.04),
+                        0 1px 3px rgba(35, 25, 22, 0.03);
+        --shadow-lifted: 0 4px 20px rgba(35, 25, 22, 0.06),
+                         0 2px 6px rgba(35, 25, 22, 0.04);
+        --shadow-brand-glow: 0 4px 16px rgba(154, 64, 33, 0.22);
+        --focus-ring: 0 0 0 3px rgba(154, 64, 33, 0.28);
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-xl: 16px;
+        --radius-pill: 9999px;
+        --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+        --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        --ease-literary: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--color-text-primary);
+        background:
+          radial-gradient(circle at 12% 18%, rgba(154, 64, 33, 0.08), transparent 28%),
+          linear-gradient(135deg, #fff8f6 0%, #fff1ed 46%, #f8eee9 100%);
+        font-family: var(--font-ui);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(154, 64, 33, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(154, 64, 33, 0.025) 1px, transparent 1px);
+        background-size: 28px 28px;
+        mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent 75%);
+      }
+
+      main {
+        width: min(1120px, calc(100% - 32px));
+        margin: 34px auto;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.25fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .intro,
+      .panel {
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid var(--color-border-subtle);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-paper);
+        backdrop-filter: blur(14px);
+        animation: fade-up 520ms var(--ease-literary) both;
+      }
+
+      .intro {
+        padding: 26px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .intro::after {
+        content: "";
+        position: absolute;
+        left: 26px;
+        right: 26px;
+        bottom: 24px;
+        height: 1px;
+        background: linear-gradient(90deg, var(--color-brand), transparent);
+        opacity: 0.35;
+      }
+
+      .panel {
+        padding: 24px;
+        animation-delay: 80ms;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 22px;
+        padding: 7px 12px;
+        border: 1px solid var(--color-border-default);
+        border-radius: var(--radius-pill);
+        color: var(--color-brand);
+        background: rgba(255, 219, 208, 0.45);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+      }
+
+      h1 {
+        margin: 0 0 14px;
+        font-family: var(--font-literary);
+        font-size: clamp(30px, 5vw, 52px);
+        line-height: 1.12;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+
+      .sub {
+        margin: 0;
+        max-width: 34em;
+        color: var(--color-text-secondary);
+        font-family: var(--font-literary);
+        font-size: 18px;
+        line-height: 1.75;
+      }
+
+      .facts {
+        display: grid;
+        gap: 10px;
+        margin-top: 30px;
+      }
+
+      .fact {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 12px;
+        border: 1px solid var(--color-border-subtle);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 248, 246, 0.75);
+      }
+
+      .fact b {
+        color: var(--color-brand);
+        font-family: var(--font-code);
+        font-size: 13px;
+      }
+
+      .fact span {
+        color: var(--color-text-secondary);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      form {
+        display: grid;
+        gap: 18px;
+      }
+
+      .row {
+        display: grid;
+        gap: 9px;
+      }
+
+      .label-line {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      label,
+      .field-label {
+        color: var(--color-text-primary);
+        font-weight: 650;
+      }
+
+      .field-note {
+        color: var(--color-text-tertiary);
+        font-size: 13px;
+      }
+
+      textarea,
+      input[type="url"] {
+        width: 100%;
+        border: 1px solid var(--color-border-default);
+        border-radius: var(--radius-md);
+        padding: 14px 16px;
+        font: inherit;
+        color: var(--color-text-primary);
+        background: rgba(255, 255, 255, 0.9);
+        outline: none;
+        transition:
+          border-color 150ms var(--ease-standard),
+          box-shadow 150ms var(--ease-standard),
+          background-color 150ms var(--ease-standard);
+      }
+
+      textarea {
+        min-height: 280px;
+        resize: vertical;
+        line-height: 1.62;
+        font-family: var(--font-code);
+        font-size: 14px;
+      }
+
+      textarea::placeholder,
+      input::placeholder {
+        color: var(--color-text-tertiary);
+      }
+
+      textarea:focus,
+      input[type="url"]:focus {
+        border-color: var(--color-brand);
+        box-shadow: var(--focus-ring);
+        background: var(--color-bg-card);
+      }
+
+      .modes {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .mode {
+        position: relative;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 11px;
+        min-height: 92px;
+        align-items: flex-start;
+        border: 1px solid var(--color-border-default);
+        border-radius: var(--radius-lg);
+        padding: 14px;
+        cursor: pointer;
+        background: rgba(255, 248, 246, 0.7);
+        transition:
+          transform 150ms var(--ease-spring),
+          border-color 150ms var(--ease-standard),
+          background-color 150ms var(--ease-standard),
+          box-shadow 150ms var(--ease-standard);
+      }
+
+      .mode:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-lifted);
+      }
+
+      .mode:has(input:checked) {
+        border-color: var(--color-brand);
+        background: rgba(255, 219, 208, 0.44);
+      }
+
+      .mode input {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        accent-color: var(--color-brand);
+      }
+
+      .mode strong {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--color-text-primary);
+      }
+
+      .mode span span {
+        display: block;
+        color: var(--color-text-secondary);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        padding-top: 3px;
+      }
+
+      button {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 148px;
+        min-height: 44px;
+        border: 1.5px solid transparent;
+        border-radius: var(--radius-pill);
+        background: var(--color-brand);
+        color: #fff;
+        padding: 11px 24px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition:
+          background-color 180ms var(--ease-standard),
+          box-shadow 180ms var(--ease-standard),
+          transform 150ms var(--ease-spring),
+          opacity 180ms var(--ease-standard);
+      }
+
+      button:hover {
+        background: var(--color-brand-active);
+        box-shadow: var(--shadow-brand-glow);
+        transform: translateY(-1px);
+      }
+
+      button:active {
+        background: var(--color-brand-hover);
+        box-shadow: none;
+        transform: scale(0.98);
+      }
+
+      button:focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+      }
+
+      button.is-loading {
+        color: transparent;
+        pointer-events: none;
+      }
+
+      button.is-loading::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        width: 17px;
+        height: 17px;
+        margin: auto;
+        border: 2px solid rgba(255, 255, 255, 0.34);
+        border-top-color: #fff;
+        border-radius: var(--radius-pill);
+        animation: spin 700ms linear infinite;
+      }
+
+      .hint {
+        color: var(--color-text-tertiary);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .error {
+        margin-bottom: 18px;
+        border: 1px solid rgba(186, 26, 26, 0.36);
+        background: var(--color-error-bg);
+        border-radius: var(--radius-md);
+        padding: 12px 14px;
+        color: var(--color-error);
+        line-height: 1.55;
+        animation: shake 300ms var(--ease-standard) both;
+      }
+
+      @keyframes fade-up {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-5px); }
+        40% { transform: translateX(5px); }
+        60% { transform: translateX(-3px); }
+        80% { transform: translateX(3px); }
+      }
+
+      @media (max-width: 860px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        .intro::after {
+          display: none;
+        }
+      }
+
+      @media (max-width: 640px) {
+        main {
+          width: calc(100% - 20px);
+          margin: 18px auto;
+        }
+
+        .intro,
+        .panel {
+          padding: 18px;
+        }
+
+        .modes {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="shell">
+        <aside class="intro" aria-label="工具说明">
+          <p class="eyebrow">PUBLIC SHARE EXPORT</p>
+          <h1>元宝录音 Markdown 导出</h1>
+          <p class="sub">粘贴公开分享文本，程序会提取元宝链接，请求真实页面数据，并输出可整理的 Markdown。</p>
+          <div class="facts" aria-label="能力说明">
+            <div class="fact">
+              <b>01</b>
+              <span>解析公开分享页内的 Next.js 数据，不读取浏览器登录态。</span>
+            </div>
+            <div class="fact">
+              <b>02</b>
+              <span>支持带人物、纯文字，以及合并或逐链接分开导出。</span>
+            </div>
+            <div class="fact">
+              <b>03</b>
+              <span>导出内容包含 AI 总结和实时转写，便于复习归档。</span>
+            </div>
+          </div>
+        </aside>
+
+        <section class="panel" aria-label="导出表单">
+          {% if error %}
+            <div class="error">{{ error }}</div>
+          {% endif %}
+
+          <form method="post" action="/export" id="export-form">
+            <div class="row">
+              <div class="label-line">
+                <label for="source_text">输入文本</label>
+                <span class="field-note">自动识别 yuanbao.tencent.com/e/rm 链接</span>
+              </div>
+              <textarea id="source_text" name="source_text" required placeholder="粘贴包含 https://yuanbao.tencent.com/e/rm/... 的文本">{{ source_text or "" }}</textarea>
+            </div>
+
+            <div class="row">
+              <div class="label-line">
+                <span class="field-label">导出方式</span>
+                <span class="field-note">控制转写正文格式</span>
+              </div>
+              <div class="modes">
+                <label class="mode">
+                  <input type="radio" name="mode" value="with-speakers" {% if selected_mode != "plain-text" %}checked{% endif %}>
+                  <span>
+                    <strong>带人物</strong>
+                    <span>每段转写保留说话人和时间戳。</span>
+                  </span>
+                </label>
+                <label class="mode">
+                  <input type="radio" name="mode" value="plain-text" {% if selected_mode == "plain-text" %}checked{% endif %}>
+                  <span>
+                    <strong>纯文字</strong>
+                    <span>转写正文只输出文本，不带人物和时间戳。</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="label-line">
+                <span class="field-label">文件组织</span>
+                <span class="field-note">控制下载文件数量</span>
+              </div>
+              <div class="modes">
+                <label class="mode">
+                  <input type="radio" name="layout" value="combined" {% if selected_layout != "separate" %}checked{% endif %}>
+                  <span>
+                    <strong>合并导出</strong>
+                    <span>所有链接写入一个完整 Markdown。</span>
+                  </span>
+                </label>
+                <label class="mode">
+                  <input type="radio" name="layout" value="separate" {% if selected_layout == "separate" %}checked{% endif %}>
+                  <span>
+                    <strong>分开导出</strong>
+                    <span>每个链接生成一个 Markdown，并打包下载。</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="label-line">
+                <label for="proxy_url">代理地址</label>
+                <span class="field-note">可选</span>
+              </div>
+              <input id="proxy_url" name="proxy_url" type="url" placeholder="例如 http://127.0.0.1:8080" value="{{ proxy_url or "" }}">
+            </div>
+
+            <div class="actions">
+              <button type="submit" id="submit-button">生成 Markdown</button>
+              <span class="hint" id="submit-hint">只抓取公开分享页；不会保存输入内容。</span>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+    <script>
+      const form = document.getElementById("export-form");
+      const button = document.getElementById("submit-button");
+      const hint = document.getElementById("submit-hint");
+
+      form.addEventListener("submit", () => {
+        button.classList.add("is-loading");
+        button.setAttribute("aria-busy", "true");
+        hint.textContent = "正在请求公开分享页并生成文件，请稍候。";
+      });
+    </script>
+  </body>
+</html>
